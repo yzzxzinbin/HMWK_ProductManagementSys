@@ -113,62 +113,61 @@ void stockIn(Queue *queue) {
 }
 
 // 商品出库
-void stockOut(Queue *queue) {
-	if (isEmpty(queue)) {
-		printf("Error:库存为空，无法出库\n");
-		getchar();
-		return;
-	}
-	Product product = dequeue(queue);
-	printf("SUC>>商品出库成功\n");
-	printf("商品编号：%d\n", product.id);
-	printf("商品名称：%s\n", product.name);
-	printf("商品数量：%d\n", product.quantity);
-	char timeStr[100];
-	strftime(timeStr, 11, "%Y.%m.%d", &product.timeStruct);
-	printf("商品入库时间：%s", timeStr);
-}
 //void stockOut(Queue *queue) {
-//	printf("请输入商品编号：");
-//	int id;
-//	scanf("%d", &id);
-//	clearInputBuffer();
-//	Queue tempQueue;
-//	initQueue(&tempQueue);
-//	int found = 0;
-//	while (!isEmpty(queue)) {
-//		Product product = dequeue(queue);
-//		if (product.id == id) {
-//			found = 1;
-//			printf("商品名称：%s\n", product.name);
-//			printf("商品数量：%d\n", product.quantity);
-//			char timeStr[11];
-//			convertToTimeStr(product.timestamp, timeStr);
-//			printf("商品入库时间：%s\n", timeStr);
-//			printf("请输入商品出库数量：");
-//			int quantity;
-//			scanf("%d", &quantity);
-//			clearInputBuffer();
-//			if (quantity > product.quantity) {
-//				printf("出库数量大于库存数量，无法出库\n");
-//				enqueue(&tempQueue, product);
-//			} else {
-//				product.quantity -= quantity;
-//				enqueue(&tempQueue, product);
-//				printf("商品出库成功\n");
-//			}
-//		} else {
-//			enqueue(&tempQueue, product);
-//		}
+//	if (isEmpty(queue)) {
+//		printf("Error:库存为空，无法出库\n");
+//		getchar();
+//		return;
 //	}
-//	if (!found) {
-//		printf("未找到编号为%d的商品\n", id);
-//	}
-//	while (!isEmpty(&tempQueue)) {
-//		enqueue(queue, dequeue(&tempQueue));
-//	}
+//	Product product = dequeue(queue);
+//	printf("SUC>>商品出库成功\n");
+//	printf("商品编号：%d\n", product.id);
+//	printf("商品名称：%s\n", product.name);
+//	printf("商品数量：%d\n", product.quantity);
+//	char timeStr[100];
+//	strftime(timeStr, 11, "%Y.%m.%d", &product.timeStruct);
+//	printf("商品入库时间：%s", timeStr);
 //}
-// 查询商品数量
+void stockOut(Queue *queue) {
+	printf("请输入商品编号：");
+	int id;
+	scanf("%d", &id);
+	clearInputBuffer();
+	Queue tempQueue;
+	int found = 0;
+	while (!isEmpty(queue)) {
+		Product product = dequeue(queue);
+		if (product.id == id) {
+			found = 1;
+			printf("商品名称：%s\n", product.name);
+			printf("商品数量：%d\n", product.quantity);
+			char timeStr[11];
+//			convertToTimeStr(product.timestamp, timeStr);
+			printf("商品入库时间：%s\n", timeStr);
+			printf("请输入商品出库数量：");
+			int quantity;
+			scanf("%d", &quantity);
+			clearInputBuffer();
+			if (quantity > product.quantity) {
+				printf("出库数量大于库存数量，无法出库\n");
+				enqueue(&tempQueue, product);
+			} else {
+				product.quantity -= quantity;
+				enqueue(&tempQueue, product);
+				printf("商品出库成功\n");
+			}
+		} else {
+			enqueue(&tempQueue, product);
+		}
+	}
+	if (!found) {
+		printf("未找到编号为%d的商品\n", id);
+	}
+	while (!isEmpty(&tempQueue)) {
+		enqueue(queue, dequeue(&tempQueue));
+	}
+}
+ //查询商品数量
 void queryQuantity(Queue *queue) {
 	if (isEmpty(queue)) {
 		printf("Error>>库存为空\n");
