@@ -465,7 +465,7 @@ void  drawBlock(int startx, int starty, int endx, int endy, int backinfo, int fo
 			printf(" ");
 		}
 	}
-	csy_load_style(backinfoPAST, foreninfoPAST);
+	csy_load_style(backinfoPAST, foreinfoPAST);
 }
 
 int main() {
