@@ -1,0 +1,36 @@
+// 将字符串转换为时间结构体
+int strToTime(const char *str, struct tm *timeStruct) {
+    if (str == NULL || strlen(str) != 10) {
+        return 0;
+    }
+    
+    char yearStr[5];
+    char monthStr[3];
+    char dayStr[3];
+    
+    strncpy(yearStr, str, 4);
+    strncpy(monthStr, str + 5, 2);
+    strncpy(dayStr, str + 8, 2);
+    
+    yearStr[4] = '\0';
+    monthStr[2] = '\0';
+    dayStr[2] = '\0';
+    
+    int year = atoi(yearStr);
+    int month = atoi(monthStr);
+    int day = atoi(dayStr);
+    
+    timeStruct->tm_year = year - 1900;
+    timeStruct->tm_mon = month - 1;
+    timeStruct->tm_mday = day;
+    timeStruct->tm_hour = 0;
+    timeStruct->tm_min = 0;
+    timeStruct->tm_sec = 0;
+    
+    return 1;
+}
+
+// 将时间结构体转换为字符串
+void timeToStr(const struct tm *timeStruct, char *str) {
+    sprintf(str, "%04d-%02d-%02d", timeStruct->tm_year + 1900, timeStruct->tm_mon + 1, timeStruct->tm_mday);
+}
