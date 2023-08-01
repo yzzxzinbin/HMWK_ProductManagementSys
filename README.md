@@ -1,2 +1,2 @@
-# ProductManagementSys
-Task of University 
+# ** ProductManagementSys**
+College *C language course design* assignment
