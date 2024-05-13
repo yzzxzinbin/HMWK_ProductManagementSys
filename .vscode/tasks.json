@@ -9,7 +9,6 @@
                 "-g",
                 "-static",
                 "${file}",
-                "${workspaceFolder}\\res\\resource.o",
                 "-o",
                 "${workspaceFolder}\\bin\\${fileBasenameNoExtension}.exe",
                 "-l",
