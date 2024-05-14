@@ -4,17 +4,19 @@
 #include <time.h>
 #include <windows.h>
 #include <conio.h>
+#include <iostream>
 #define MAX_PRODUCTS 100
+#define MAX_PAGELINE 16
+using namespace std;
 
-//there
 typedef struct
 {
-    int id;		   // 编号
+    int id;        // 编号
     char name[50]; //,名称
     float price;
     int quantity;  // 数量
     char date[20]; // 日期
-    bool valid;	   // 有效标识
+    bool valid;    // 有效标识
 } Product;
 
 Product products[MAX_PRODUCTS];
@@ -76,6 +78,27 @@ void drawBlock(int startx, int starty, int endx, int endy, int backinfo, int for
     }
     csy_load_style(backinfoPAST, foreinfoPAST);
 }
+bool OpenANSIControlChar()
+{ // 启动控制台ANSI转义序列模块
+    HANDLE hStd = GetStdHandle(STD_OUTPUT_HANDLE);
+    if (hStd == INVALID_HANDLE_VALUE)
+    {
+        return false;
+    }
+    // 获取控制台模式
+    DWORD dwMode = 0;
+    if (!GetConsoleMode(hStd, &dwMode))
+    {
+        return false;
+    }
+    // 增加控制台模式的选项：启用虚拟终端
+    dwMode |= ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+    if (!SetConsoleMode(hStd, dwMode))
+    {
+        return false;
+    }
+    return true;
+}
 void showMenu()
 {
     printf("\n");
@@ -84,7 +107,7 @@ void showMenu()
     printf("2. 商品售卖\n");
     printf("3. 流水统计\n");
     printf("4. 数据保存\n");
-    printf("5. 商品出库\n");
+    printf("5. 商品删除\n");
     printf("0. 退出系统\n");
     printf("请选择操作：");
 }
@@ -129,7 +152,7 @@ void getInputAndAddProduct()
 {
     int id, quantity;
     float price;
-    char name[50], date[20];
+    char name[50], date[26];
 
     printf("请输入产品ID：  \b\b");
     scanf("%d", &id);
@@ -143,10 +166,12 @@ void getInputAndAddProduct()
     scanf("%f", &price);
     printf("请输入产品数量：");
     scanf("%d", &quantity);
-    printf("请输入产品日期：");
-    scanf("%s", date);
+    time_t currentTime = time(nullptr);
+    struct tm *timeInfo = localtime(&currentTime);
+    char timeBuffer[20];
+    strftime(timeBuffer, sizeof(timeBuffer), "%Y.%m.%d-%H:%M:%S", timeInfo);
 
-    addProduct(id, name, price, quantity, date);
+    addProduct(id, name, price, quantity, timeBuffer);
 }
 void removeProduct(int id)
 {
@@ -328,19 +353,49 @@ void calculateSalesStats()
     printf("售卖次数：%d\n", salesCount);
     printf("销售总金额：%.2f\n", totalSalesAmount);
 }
+inline void SetConsoleWindowPosition(int x, int y)
+{ // 基于Windows API设置窗口位置 ,参数为-1时为居中显示
+    HWND hwnd = GetConsoleWindow();
+    RECT r;
+    GetWindowRect(hwnd, &r);
 
+    int width = r.right - r.left;
+    int height = r.bottom - r.top;
+
+    int screen_width = GetSystemMetrics(SM_CXSCREEN);
+    int screen_height = GetSystemMetrics(SM_CYSCREEN);
+
+    if (x == -1)
+        x = (screen_width - width) / 2;
+    if (y == -1)
+        y = (screen_height - height) / 2;
+
+    MoveWindow(hwnd, x, y, width, height, TRUE);
+}
 int main(void)
 {
     SetConsoleTitle("ProductManagementSystem.exe");
     SetConsoleOutputCP(65001);
     SetConsoleCP(65001);
+    SetWindowLongPtrA(GetConsoleWindow(),
+                      GWL_STYLE,
+                      GetWindowLongPtrA(GetConsoleWindow(),
+                                        GWL_STYLE) &
+                          ~WS_SIZEBOX &
+                          ~WS_MAXIMIZEBOX &
+                          ~WS_MINIMIZEBOX);
+    SetConsoleWindowPosition(-1, -1);
 
     readInventoryFromFile();
+
     int choice;
+    int pageIndex = 1;
+    const int pageMax = MAX_PRODUCTS / MAX_PAGELINE + (MAX_PRODUCTS % MAX_PAGELINE > 0 ? 1 : 0);
+
     while (true)
     {
         system("cls");
-        system("color be");
+        system("color bd");
         time_t currentTime;
         time(&currentTime);
         struct tm *localTime = localtime(&currentTime);
@@ -350,19 +405,20 @@ int main(void)
         int hour = localTime->tm_hour;
         int minute = localTime->tm_min;
         int second = localTime->tm_sec;
-        system("mode con cols=100 lines=18");
-        printf("\t\t\t\t█ 商品管理系统 V1.1█");
-        printf("    %d-%d-%d-%d:%d:%d\n", year, month, day, hour, minute, second);
-        drawBlock(30, 1, 95, 16, 0x3, 0xe, 0x3, 0xe);
+        system("mode con cols=110 lines=18");
+        printf("\t\t\t商品管理系统 V1.1");
+        printf("    %d-%d-%d-%d:%d:%d \t %d\n", year, month, day, hour, minute, second, pageIndex);
+        drawBlock(30, 1, 105, 16, 0x3, 0xe, 0x3, 0xe);
         cui_position_set(30, 1);
         printf("商品ID  商品名称              商品价格  商品数量   入库时间");
         cui_position_set(30, 2);
-        for (int i = 0; i < MAX_PRODUCTS; i++)
+        int productIndex = (pageIndex - 1) * MAX_PAGELINE;
+        for (int i = 0; i < MAX_PAGELINE, productIndex < MAX_PRODUCTS; i++, productIndex = (pageIndex - 1) * MAX_PAGELINE + i)
         {
 
-            if (products[i].valid)
+            if (products[productIndex].valid)
             {
-                printf(" %-8d %-20s %-10.2f %-8d %s", products[i].id, products[i].name, products[i].price, products[i].quantity, products[i].date);
+                printf(" %-8d %-20s %-10.2f %-8d %s", products[productIndex].id, products[productIndex].name, products[productIndex].price, products[productIndex].quantity, products[productIndex].date);
                 cui_position_set(30, -1);
             }
         }
@@ -370,48 +426,60 @@ int main(void)
         cui_position_set(0, 0);
         showMenu();
 
-        choice = getche() - '0'; // 使用getche函数获取用户输入的选择
+        choice = getch() - '0'; // 使用getche函数获取用户输入的选择
+        std::cout << choice;
 
         switch (choice)
         {
-            case 1:
-                printf("\n");
-                getInputAndAddProduct();
-                break;
-            case 2:
-                int id, quantity;
-                printf("\n请输入要出售的商品ID：");
-                scanf("%d", &id);
-                printf("请输入要出售的商品数量：");
-                scanf("%d", &quantity);
-                sellProduct(id, quantity);
-                break;
-            case 3:
-                printf("\n");
-                calculateSalesStats();
-                getchar();
-                break;
-            case 4:
-                writeInventoryToFile();
-                break;
-            case 5:
-                int ID;
-                printf("\n请输入出库商品的ID");
-                scanf("%d", &ID);
-                removeProduct(ID);
-                break;
-            case 0:
-                printf("\n感谢使用商品管理系统，再见！\n");
-                goto outofloop;
-            default:
-                printf("\n无效的选择，请重新输入。\n");
-                getchar();
-                break;
+        case 1:
+            printf("\n");
+            getInputAndAddProduct();
+            break;
+        case 2:
+            int id, quantity;
+            printf("\n请输入要出售的商品ID：");
+            scanf("%d", &id);
+            printf("请输入要出售的商品数量：");
+            scanf("%d", &quantity);
+            sellProduct(id, quantity);
+            break;
+        case 3:
+            printf("\n");
+            calculateSalesStats();
+            getchar();
+            break;
+        case 4:
+            writeInventoryToFile();
+            break;
+        case 5:
+            int ID;
+            printf("\n请输入出库商品的ID");
+            scanf("%d", &ID);
+            removeProduct(ID);
+            break;
+        case 0:
+            printf("\n感谢使用商品管理系统，再见！\n");
+            goto outofloop;
+        case 176:
+        {
+
+            choice = getch() - '0';
+            cout << choice;
+            if (choice == 27 && pageIndex > 1)
+                pageIndex--;
+            else if (choice == 29 && pageIndex < pageMax)
+                pageIndex++;
+        }
+        break;
+        default:
+            printf("\n无效的选择，请重新输入。\n");
+            getchar();
+            break;
         }
 
         printf("\n");
     }
-    outofloop:
+outofloop:
     writeInventoryToFile();
     return 0;
 }
