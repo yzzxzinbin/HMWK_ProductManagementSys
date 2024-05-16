@@ -11,6 +11,7 @@ using namespace std;
 
 int pageIndex = 1;
 int pageMax = MAX_PRODUCTS / MAX_PAGELINE + (MAX_PRODUCTS % MAX_PAGELINE > 0 ? 1 : 0);
+int ProgrameTestDataLoopCount = 0;
 
 void outputCore(int mode);
 
@@ -169,6 +170,19 @@ void getInputAndAddProduct()
     {
         return;
     }
+    else
+    {
+        for (int i = 0; i < MAX_PRODUCTS; i++)
+        {
+            if (products[i].valid == true && products[i].id == id)
+            {
+                printf("请输入产品数量：");
+                scanf("%d", &quantity);
+                products[i].quantity += quantity;
+                return;
+            }
+        }
+    }
     printf("请输入产品名称：");
     scanf("%s", name);
     printf("请输入产品单价：");
@@ -204,15 +218,15 @@ void searchProduct(int id)
     case 0:
         break;
     case 1:
-        printf("请输入新的商品名称：");
+        printf("\n请输入新的商品名称：");
         scanf("%s", products[index].name);
         break;
     case 2:
-        printf("请输入新的商品价格：");
+        printf("\n请输入新的商品价格：");
         scanf("%f", &products[index].price);
         break;
     case 3:
-        printf("请输入新的商品数量：");
+        printf("\n请输入新的商品数量：");
         scanf("%d", &products[index].quantity);
         break;
     default:
@@ -441,8 +455,8 @@ void outputCore(int mode)
     int minute = localTime->tm_min;
     int second = localTime->tm_sec;
     system("cls");
-    printf("\t\t\t\t商品管理系统 V1.1");
-    printf("    %d-%d-%d-%d:%d:%d \t %d\n", year, month, day, hour, minute, second, pageIndex);
+    printf("\t\t\t\t 商品管理系统 V1.2");
+    printf("    %d-%d-%d-%d:%d:%d\n", year, month, day, hour, minute, second);
     drawBlock(30, 1, 105, 17, 0x3, 0xe, 0x3, 0xe);
 
     cui_position_set(30, 1);
@@ -474,9 +488,9 @@ void outputCore(int mode)
     csy_load_style(0x9, 0xe);
     // std::cout << "Page " << pageIndex << "/" << pageMax;
     if (mode == -1)
-        printf("Page: %d/%d\tProducts:%d", pageIndex, pageMax, productCount);
+        printf("Page: %d/%d\tProducts:%d\tLoop:%d", pageIndex, pageMax, productCount, ProgrameTestDataLoopCount);
     else
-        printf("Searching:%d", productIndex);
+        printf("Searching DataArray:[%d]", mode);
 
     csy_load_style(0xb, 0x5);
     cui_position_set(0, 0);
@@ -520,10 +534,11 @@ int main(void)
 
     while (true)
     {
+        ProgrameTestDataLoopCount++;
         outputCore(-1);
 
-        choice = getche() - '0'; // 使用getche函数获取用户输入的选择
-        // std::cout << choice;
+        choice = getch() - '0';
+        std::cout << choice;
 
         switch (choice)
         {
@@ -542,7 +557,6 @@ int main(void)
         case 3:
             printf("\n");
             calculateSalesStats();
-            getchar();
             break;
         case 6:
             writeInventoryToFile();
